@@ -15,7 +15,7 @@ Confira a sintaxe com `node --check game.js`.
 
 ## Início e progressão
 
-A partida começa no nível 1, com 50 moedas, nove canteiros vazios, milho liberado e nenhum prédio ou animal comprado. Plante, regue, espere crescer e colha para vender. Objetivos sequenciais dão recompensas que só podem ser recebidas uma vez. Cada 100 XP corresponde a um nível.
+A partida começa no nível 1, com 50 moedas, nove espaços de grama para preparar, milho liberado e nenhum prédio ou animal comprado. Selecione a enxada, aplique terra sem custo, escolha uma semente, plante, regue, espere crescer e colha para vender. A terra preparada permanece após a colheita. Objetivos sequenciais dão recompensas que só podem ser recebidas uma vez. Cada 100 XP corresponde a um nível.
 
 | Cultura | Nível | Custo | Crescimento | Venda | XP |
 | --- | --- | --- | --- | --- | --- |
@@ -41,9 +41,19 @@ Compras de melhorias preservam pelo menos 5 moedas para que o jogador possa cont
 
 ## Controles e salvamento
 
-Arraste o mapa para mover a câmera, use a roda ou +/− para aproximar e o botão de casa para centralizar. As teclas 1 a 4 selecionam examinar, plantar, regar e colher. Ajuda e Objetivos ficam à esquerda; Loja na barra inferior.
+Arraste o mapa para mover a câmera, use a roda ou +/− para aproximar e o botão de casa para centralizar. As teclas 1 a 5 selecionam visualizar, plantar, regar, colher e aplicar terra. Ajuda e Objetivos ficam à esquerda.
 
-O progresso é salvo automaticamente neste navegador, sob `minifazenda-progress-v3`. Esta campanha começa do zero, separada do antigo protótipo com cenário pronto. O salvamento anterior (`minifazenda-save-v1`) permanece intacto. A migração do terreno centralizado para a expansão frontal conserva moedas, XP, compras, culturas e seus tempos; uma cópia anterior fica em `minifazenda-progress-v3-before-front-square`. Ainda não há contas, sincronização entre aparelhos ou visitas a amigos.
+O painel verde no canto inferior direito mantém a disposição da referência: Loja ocupa duas linhas à esquerda; visualizar, enxada e máquinas ficam em cima; conquistas, presentes e armazém ficam embaixo.
+
+- **Loja:** sementes, construções e entrada para o modo de expansão.
+- **Visualizar:** modo inicial; inspeciona a fazenda e abre objetos sem plantar ou modificar o solo.
+- **Enxada:** aplica terra gratuitamente nos espaços de grama liberados. Não prepara áreas bloqueadas.
+- **Conquistas:** medalhas ligadas às colheitas, plantios, expansões e bens conquistados. Os objetivos com recompensas continuam separados.
+- **Máquinas:** consulta, compra e uso do trator, respeitando o nível necessário.
+- **Presentes:** caixa vazia, com contador zero. O envio real entre amigos ainda não existe; a interface informa essa limitação e não inventa presentes recebidos.
+- **Armazém:** guarda os objetos retirados da fazenda. Clique em um objeto e em “Guardar no armazém”; depois use “Recolocar” para devolvê-lo à posição original sem pagar novamente. Objetos guardados não aparecem na fazenda, não produzem e não dão bônus. A produção retoma o tempo restante quando o objeto volta.
+
+O progresso é salvo automaticamente neste navegador, sob `minifazenda-progress-v3`. Esta campanha começa do zero, separada do antigo protótipo com cenário pronto. O salvamento anterior (`minifazenda-save-v1`) permanece intacto. A migração do terreno centralizado para a expansão frontal conserva moedas, XP, compras, culturas e seus tempos; uma cópia anterior fica em `minifazenda-progress-v3-before-front-square`. A atualização da enxada preserva a terra preparada nos salvamentos anteriores e mantém uma cópia em `minifazenda-progress-v3-before-manual-soil`. Ainda não há contas, sincronização entre aparelhos ou visitas a amigos.
 
 ## Teste funcional
 
@@ -53,11 +63,12 @@ O teste automatizado usa Chromium e Playwright apenas no desenvolvimento. Com o 
 npm install --prefix /tmp/minifazenda-check --cache /tmp/npm-cache playwright
 PLAYWRIGHT_MODULE=/tmp/minifazenda-check/node_modules/playwright node tests/progression.cjs
 PLAYWRIGHT_MODULE=/tmp/minifazenda-check/node_modules/playwright node tests/map.cjs
+PLAYWRIGHT_MODULE=/tmp/minifazenda-check/node_modules/playwright node tests/panel.cjs
 ```
 
 `BASE_URL` pode indicar outro servidor local e `CHROMIUM_PATH` pode indicar outro executável. O padrão é `http://127.0.0.1:8000` e `/usr/bin/chromium`.
 
-O teste percorre a evolução inicial com colheitas reais e relógio simulado, verifica bloqueios por nível, expansões, recompensas únicas, produção das construções, bônus da casa, trator, reserva para sementes, persistência e interface móvel. Os cenários de níveis avançados usam um estado preparado exclusivamente no navegador de teste. O teste de mapa verifica a geometria quadrada, a âncora de trás, as expansões frontais, a visibilidade das medidas somente no modo de expansão, os dois controles, cancelamento e migração dos salvamentos.
+O teste percorre a evolução inicial com colheitas reais e relógio simulado, verifica bloqueios por nível, expansões, recompensas únicas, produção das construções, bônus da casa, trator, reserva para sementes, persistência e interface móvel. Os cenários de níveis avançados usam um estado preparado exclusivamente no navegador de teste. O teste de mapa verifica a geometria quadrada, a âncora de trás, as expansões frontais, a visibilidade das medidas somente no modo de expansão, os dois controles, cancelamento e migração dos salvamentos. O teste de painel verifica os sete botões, a enxada, o modo de visualizar, as conquistas, as máquinas, a caixa de presentes vazia, o ciclo de guardar/recolocar, a pausa de produção e o posicionamento em telas de 390 e 320 pixels.
 
 ## Publicação
 

@@ -22,14 +22,14 @@ const BUILDINGS = {
   cottage:{name:'Casa da fazenda',level:4,cost:400,x:445,y:155,description:'Aumenta em 20% o valor de venda de todas as colheitas.'},
   tractor:{name:'Trator',level:6,cost:900,x:335,y:201,description:'Rega todas as plantas de uma vez, por 1 moeda por canteiro.'}
 };
-function freshState(){return {version:3,mapLayout:MAP_LAYOUT,coins:50,xp:0,landStep:0,plots:Array.from({length:N*N},()=>({stage:0})),buildings:{},counts:{plant:0,water:0,harvest:0},claimed:[]};}
+function freshState(){return {version:3,mapLayout:MAP_LAYOUT,soilLayout:'manual-v1',coins:50,xp:0,landStep:0,plots:Array.from({length:N*N},()=>({stage:0,tilled:false})),buildings:{},counts:{plant:0,water:0,harvest:0},claimed:[]};}
 let state=freshState();
 function validSave(s){
   return s?.version===3 && Number.isSafeInteger(s.coins) && s.coins>=0 && Number.isSafeInteger(s.xp) && s.xp>=0 &&
     Number.isInteger(s.landStep) && s.landStep>=0 && s.landStep<LAND.length &&
     Array.isArray(s.plots) && s.plots.length===N*N && s.plots.every(p=>p && [0,1,2].includes(p.stage) &&
-      (!p.crop||CROPS[p.crop]) && (p.stage!==2||Number.isFinite(p.watered))) &&
-    s.buildings && Object.entries(s.buildings).every(([id,b])=>BUILDINGS[id] && b && Number.isFinite(b.boughtAt) && (b.readyAt===null || Number.isFinite(b.readyAt))) &&
+      (!p.crop||CROPS[p.crop]) && (p.tilled===undefined||typeof p.tilled==='boolean') && (p.stage!==2||Number.isFinite(p.watered))) &&
+    s.buildings && Object.entries(s.buildings).every(([id,b])=>BUILDINGS[id] && b && Number.isFinite(b.boughtAt) && (b.readyAt===null || Number.isFinite(b.readyAt)) && (b.stored===undefined||typeof b.stored==='boolean') && (b.remainingMs===undefined||b.remainingMs===null||(Number.isFinite(b.remainingMs)&&b.remainingMs>=0))) &&
     s.counts && ['plant','water','harvest'].every(k=>Number.isSafeInteger(s.counts[k])&&s.counts[k]>=0) &&
     Array.isArray(s.claimed) && s.claimed.every(id=>typeof id==='string');
 }
@@ -40,7 +40,7 @@ try{
     if(saved.mapLayout!==MAP_LAYOUT){
       // Rebase the former centered plots without changing their timers or crops.
       const start=Math.floor((N-LAND[saved.landStep].size)/2);
-      const plots=Array.from({length:N*N},()=>({stage:0}));
+      const plots=Array.from({length:N*N},()=>({stage:0,tilled:false}));
       for(let i=0;i<N;i++)for(let j=0;j<N;j++){
         const p=saved.plots[i*N+j];if(!p.stage)continue;
         const a=i-start,b=j-start;
@@ -53,6 +53,14 @@ try{
     }
   }
 }catch{}
+// Former saves had soil on every owned cell; keep it while new farms start on grass.
+if(state.soilLayout!=='manual-v1'){
+  try{if(!localStorage.getItem(KEY+'-before-manual-soil'))localStorage.setItem(KEY+'-before-manual-soil',JSON.stringify(state));}catch{}
+  const size=LAND[state.landStep].size;
+  state={...state,soilLayout:'manual-v1',plots:state.plots.map((p,index)=>({...p,tilled:!!p.stage||(Math.floor(index/N)<size&&index%N<size)}))};
+  try{localStorage.setItem(KEY,JSON.stringify(state));}catch{}
+}
+function isPlaced(id){return !!state.buildings[id]&&!state.buildings[id].stored;}
 const level=()=>1+Math.floor(state.xp/100);
 function owned(i,j){const size=LAND[state.landStep].size;return i>=0&&j>=0&&i<size&&j<size;}
 function landCorners(size=LAND[state.landStep].size){
@@ -73,7 +81,7 @@ const MISSIONS=[
   {id:'coop',title:'Novos moradores',description:'Chegue ao nível 3 e compre o galinheiro.',current:()=>state.buildings.coop?1:0,target:1,coins:30,xp:25}
 ];
 function mission(){return MISSIONS.find(m=>!state.claimed.includes(m.id));}
-let tool='plant', crop='corn', zoom=1, W=0, H=0, scale=1, tx=0, ty=0;
+let tool='info', crop='corn', zoom=1, W=0, H=0, scale=1, tx=0, ty=0;
 let pan={x:0,y:0}, hover=null, pointer=null, drag=false, toastTimer;
 const floats=[];
 const $=selector=>document.querySelector(selector);
@@ -91,6 +99,7 @@ function iso(i,j){const [x,y]=grid(i,j);return [x*scale+tx,y*scale+ty];}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch{return false;}}
 function tell(text){$('#message').textContent=text;$('#message').classList.remove('quiet');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#message').classList.add('quiet'),6500);}
 function update(){
+  if(!drag)canvas.style.cursor=tool==='info'?'default':'crosshair';
   $('#money').textContent=state.coins.toLocaleString('pt-BR');$('#level').textContent=level();
   $('#xp').textContent=`${state.xp%100} / 100`;$('#xp-fill').style.width=(state.xp%100)+'%';
   document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===tool));
@@ -101,7 +110,7 @@ function update(){
   });
   const m=mission();
   $('#objective-title').textContent=m?m.title:'Uma fazenda com história';
-  $('#objective-text').textContent=m?m.description:'Continue cultivando, expandindo e subindo de nível.';
+  $('#objective-text').textContent=m?(m.id==='plant'&&!state.plots.some(p=>p.tilled)?'Use a enxada para aplicar terra. Depois plante milho.':m.description):'Continue cultivando, expandindo e subindo de nível.';
   $('#objective-progress').textContent=m?`${Math.min(m.current(),m.target)} / ${m.target}`:`Nível ${level()}`;
   $('#claim').hidden=!m;$('#claim').disabled=!m||m.current()<m.target;
   $('#claim').textContent=m?`Receber ${[m.coins?m.coins+' moedas':'',m.xp?m.xp+' XP':''].filter(Boolean).join(' + ')}`:'';
@@ -284,8 +293,11 @@ function draw(timestamp){
   drawFarmGround();
   // Only land earned by the player becomes usable, arable soil.
   for(let d=0;d<N*2-1;d++)for(let i=0;i<N;i++){
-    const j=d-i;if(j<0||j>=N||(!owned(i,j)&&!state.plots[i*N+j].stage))continue;
-    const [x,y]=grid(i+.5,j+.5);plotTile(x,y,state.plots[i*N+j],i,j);
+    const j=d-i;if(j<0||j>=N)continue;
+    const p=state.plots[i*N+j],[x,y]=grid(i+.5,j+.5);
+    if(owned(i,j)&&!p.tilled&&!p.stage&&tool==='till')diamond(x,y,21,10,'#c7dd8a10','#b9d97460');
+    if((!owned(i,j)||!p.tilled)&&!p.stage)continue;
+    plotTile(x,y,state.plots[i*N+j],i,j);
   }
   if(hover&&!owned(hover.i,hover.j)){
     const [x,y]=grid(hover.i+.5,hover.j+.5);diamond(x,y,21,10,'#f4eccb20','#c8d4a575');
@@ -303,24 +315,29 @@ function draw(timestamp){
 }
 function resize(){W=canvas.clientWidth;H=canvas.clientHeight;canvas.width=Math.round(W*devicePixelRatio);canvas.height=Math.round(H*devicePixelRatio);}
 function tileAt(clientX,clientY){const box=canvas.getBoundingClientRect(),x=(clientX-box.left-tx)/scale-445,y=(clientY-box.top-ty)/scale-180;const i=Math.floor((x/22+y/10.5)/2),j=Math.floor((y/10.5-x/22)/2);return i>=0&&j>=0&&i<N&&j<N?{i,j}:null;}
-function inspect(p){if(!p.stage)return 'Terra arada · pronta para plantar';const def=CROPS[p.crop||'corn'];return def.name+' · '+(p.stage===1?'precisa de água':ready(p)?'pronto para colher':`${Math.ceil((def.grow-Date.now()+p.watered)/1000)} s para colher`);}
+function inspect(p){if(!p.stage)return p.tilled?'Terra arada · pronta para plantar':'Grama · use a enxada para aplicar terra';const def=CROPS[p.crop||'corn'];return def.name+' · '+(p.stage===1?'precisa de água':ready(p)?'pronto para colher':`${Math.ceil((def.grow-Date.now()+p.watered)/1000)} s para colher`);}
 function act(tile){
   if(!tile)return;
   if(expansionMode)return tell('Escolha uma seta da frente para ver a expansão, ou clique em Voltar à fazenda.');
   const {i,j}=tile,index=i*N+j,p=state.plots[index],def=CROPS[crop];
   if(!owned(i,j)&&!p.stage)return tell('Seu terreno cresce pelos dois lados da frente. Abra Loja → Expansão para ampliar.');
+  if(tool==='till'){
+    if(p.tilled||p.stage)return tell('A terra desse espaço já está preparada. Escolha uma semente para plantar.');
+    state.plots[index]={stage:0,tilled:true};save();update();tell('Terra preparada! Escolha milho na barra de sementes e plante aqui.');return;
+  }
   if(tool==='plant'){
+    if(!p.tilled)return tell('Primeiro use a enxada do painel para aplicar terra neste espaço.');
     if(level()<def.level)return tell(`${def.name} desbloqueia no nível ${def.level}.`);
     if(p.stage)return tell(inspect(p));
     if(state.coins<def.cost)return tell(`Você precisa de ${def.cost} moedas. Colha suas plantas maduras para ganhar mais.`);
-    state.coins-=def.cost;state.plots[index]={stage:1,crop};state.counts.plant++;tell(`${def.name} plantado! Agora selecione o regador.`);
+    state.coins-=def.cost;state.plots[index]={stage:1,crop,tilled:true};state.counts.plant++;tell(`${def.name} plantado! Agora selecione o regador.`);
   }else if(tool==='water'){
     if(!p.stage)return tell('Esse canteiro está vazio. Escolha uma semente e plante primeiro.');
     if(p.stage===2)return tell(inspect(p));
     p.stage=2;p.watered=Date.now();state.counts.water++;tell(`${CROPS[p.crop||'corn'].name} regado! Fica pronto em ${CROPS[p.crop||'corn'].grow/1000} segundos.`);
   }else if(tool==='harvest'){
     if(!ready(p))return tell(p.stage?inspect(p):'Use a cesta nas plantas que já estiverem maduras.');
-    const harvest=CROPS[p.crop||'corn'],sale=Math.floor(harvest.sale*(state.buildings.cottage?1.2:1));state.coins+=sale;const up=grantXP(harvest.xp);state.counts.harvest++;state.plots[index]={stage:0};
+    const harvest=CROPS[p.crop||'corn'],sale=Math.floor(harvest.sale*(isPlaced('cottage')?1.2:1));state.coins+=sale;const up=grantXP(harvest.xp);state.counts.harvest++;state.plots[index]={stage:0,tilled:true};
     const [x,y]=grid(i+.5,j+.5);floats.push({x,y:y-15,text:`+${sale} moedas · +${harvest.xp} XP`,time:performance.now()});tell(up?levelMessage():`Boa colheita! +${sale} moedas e +${harvest.xp} XP.`);
   }else return tell(inspect(p));
   save();update();
@@ -328,11 +345,11 @@ function act(tile){
 function tooltip(e){const el=$('#tooltip');if(!hover||drag){el.hidden=true;return;}el.textContent=owned(hover.i,hover.j)?inspect(state.plots[hover.i*N+hover.j]):'Amplie o terreno em Loja → Expansão';el.hidden=false;const box=canvas.getBoundingClientRect();el.style.left=Math.max(4,Math.min(W-205,e.clientX-box.left+15))+'px';el.style.top=Math.max(8,e.clientY-box.top-37)+'px';}
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0||pointer)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY,panX:pan.x,panY:pan.y};drag=false;canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove',e=>{if(pointer&&pointer.id===e.pointerId){if(Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y)>5)drag=true;if(drag){pan.x=pointer.panX+e.clientX-pointer.x;pan.y=pointer.panY+e.clientY-pointer.y;canvas.style.cursor='grabbing';}}hover=tileAt(e.clientX,e.clientY);tooltip(e);});
-canvas.addEventListener('pointerup',e=>{if(!pointer||pointer.id!==e.pointerId)return;if(!drag){const asset=buildingAt(e.clientX,e.clientY);if(asset)openBuilding(asset);else act(tileAt(e.clientX,e.clientY));}pointer=null;drag=false;canvas.style.cursor='crosshair';});
-canvas.addEventListener('pointercancel',()=>{pointer=null;drag=false;canvas.style.cursor='crosshair';});
+canvas.addEventListener('pointerup',e=>{if(!pointer||pointer.id!==e.pointerId)return;if(!drag){const asset=buildingAt(e.clientX,e.clientY);if(asset)openBuilding(asset);else act(tileAt(e.clientX,e.clientY));}pointer=null;drag=false;canvas.style.cursor=tool==='info'?'default':'crosshair';});
+canvas.addEventListener('pointercancel',()=>{pointer=null;drag=false;canvas.style.cursor=tool==='info'?'default':'crosshair';});
 canvas.addEventListener('pointerleave',()=>{hover=null;$('#tooltip').hidden=true;});
 canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.65,Math.min(2,zoom+(e.deltaY<0?.08:-.08)));},{passive:false});
-function setTool(next){leaveExpansionMode();tool=next;update();const hints={plant:`${CROPS[crop].name} selecionado. Clique em um canteiro vazio.`,water:'Clique nas plantas que precisam de água.',harvest:'Clique nas plantas maduras para colher.',info:'Passe o mouse ou clique nos canteiros para ver os detalhes.'};tell(hints[next]);}
+function setTool(next){leaveExpansionMode();tool=next;canvas.style.cursor=next==='info'?'default':'crosshair';update();const hints={till:'Enxada selecionada. Clique na grama do terreno para aplicar terra, sem custo.',plant:`${CROPS[crop].name} selecionado. Clique em um canteiro vazio.`,water:'Clique nas plantas que precisam de água.',harvest:'Clique nas plantas maduras para colher.',info:'Modo de visualizar. Clique nos objetos para usar ou guardar no armazém.'};tell(hints[next]);}
 function setCrop(next){if(level()<CROPS[next].level)return tell(`${CROPS[next].name} será liberado no nível ${CROPS[next].level}. Continue colhendo para ganhar XP.`);crop=next;setTool('plant');}
 document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
 document.querySelectorAll('[data-crop]').forEach(b=>b.onclick=()=>setCrop(b.dataset.crop));
@@ -340,7 +357,7 @@ $('#save').onclick=()=>tell(save()?'Fazenda salva! Seu progresso fica guardado n
 $('#in').onclick=()=>zoom=Math.min(2,zoom+.15);$('#out').onclick=()=>zoom=Math.max(.65,zoom-.15);$('#home').onclick=()=>{pan={x:0,y:0};zoom=1;};
 function modal(title,body){activeBuilding=null;$('#modal-title').textContent=title;$('#modal-body').innerHTML=body;if(!$('#modal').open)$('#modal').showModal();}
 $('#close-modal').onclick=()=>$('#modal').close();
-$('#help').onclick=()=>modal('Sua fazenda começa aqui',`<p>Você começa no <b>nível 1</b>, com <b>50 moedas e 9 canteiros vazios</b>. Não há prédios nem animais comprados.</p><p>Plante milho, regue e espere 20 segundos. Depois colha com a cesta para ganhar moedas e experiência. Recolha também as recompensas dos objetivos.</p><p>No nível 2, você poderá plantar cenouras, expandir o terreno e comprar sua primeira laranjeira. No nível 3, chegam morangos e o galinheiro.</p><p>As plantas continuam crescendo com o jogo fechado. Não murcham. A fazenda fica salva neste navegador, sem sincronização entre aparelhos.</p><p>O terreno é quadrado, com uma ponta voltada para você. Abra <b>Loja → Expansão</b> para ver a metragem e as duas setas da frente. A ponta de trás fica no mesmo lugar; a expansão aumenta os dois lados da frente juntos.</p><p>Arraste o mapa, use +/− ou a roda do mouse para aproximar e as teclas 1 a 4 para trocar de ferramenta. Clique nos prédios comprados para usá-los.</p>`);
+$('#help').onclick=()=>modal('Sua fazenda começa aqui',`<p>Você começa no <b>nível 1</b>, com <b>50 moedas e espaço para 9 canteiros</b>. Não há prédios nem animais comprados.</p><p>Use a <b>enxada</b> do painel verde para aplicar terra na grama. Depois plante milho, regue e espere 20 segundos. Depois colha com a cesta para ganhar moedas e experiência. Recolha também as recompensas dos objetivos.</p><p>No nível 2, você poderá plantar cenouras, expandir o terreno e comprar sua primeira laranjeira. No nível 3, chegam morangos e o galinheiro.</p><p>As plantas continuam crescendo com o jogo fechado. Não murcham. A fazenda fica salva neste navegador, sem sincronização entre aparelhos.</p><p>O terreno é quadrado, com uma ponta voltada para você. Abra <b>Loja → Expansão</b> para ver a metragem e as duas setas da frente. A ponta de trás fica no mesmo lugar; a expansão aumenta os dois lados da frente juntos.</p><p>Arraste o mapa, use +/− ou a roda do mouse para aproximar e as teclas 1 a 5 para trocar de ferramenta. Clique nos prédios comprados para usá-los.</p>`);
 $('#quest').onclick=()=>modal('O caminho da sua fazenda',MISSIONS.map(m=>{
   const claimed=state.claimed.includes(m.id),done=m.current()>=m.target;
   return `<div class="mission-row ${claimed?'completed':''}"><b>${claimed?'✓ ':''}${m.title}</b><small>${m.description} · ${Math.min(m.current(),m.target)}/${m.target}</small><span>${claimed?'Recompensa recebida':`${m.coins} moedas · ${m.xp} XP${done?' · disponível':''}`}</span></div>`;
@@ -350,7 +367,9 @@ $('#shop').onclick=()=>openShop();
 $('#expand-left').onclick=()=>openExpansion('left');
 $('#expand-right').onclick=()=>openExpansion('right');
 $('#exit-expansion').onclick=leaveExpansionMode;
-window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').open){leaveExpansionMode();return;}if($('#modal').open||e.ctrlKey||e.metaKey||e.altKey)return;const next={'1':'info','2':'plant','3':'water','4':'harvest'}[e.key];if(next)setTool(next);});
+$('#achievements').onclick=openAchievements;$('#machines').onclick=openMachines;
+$('#gifts').onclick=openGifts;$('#warehouse').onclick=openWarehouse;
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').open){leaveExpansionMode();return;}if($('#modal').open||e.ctrlKey||e.metaKey||e.altKey)return;const next={'1':'info','2':'plant','3':'water','4':'harvest','5':'till'}[e.key];if(next)setTool(next);});
 window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
 cacheScenery();resize();update();requestAnimationFrame(draw);toastTimer=setTimeout(()=>$('#message').classList.add('quiet'),6500);
 
@@ -362,22 +381,22 @@ function buyExpansion(){
   leaveExpansionMode();if($('#modal').open)$('#modal').close();
   tell(`Seu terreno cresceu pelos dois lados da frente! Agora são ${next.size**2} canteiros.`);
 }
-function buyBuilding(id){
+function buyBuilding(id,origin='shop'){
   const def=BUILDINGS[id];if(!def||state.buildings[id])return;
   if(level()<def.level)return tell(`${def.name} exige o nível ${def.level}.`);
   if(state.coins<def.cost+5)return tell(`Você precisa de ${def.cost} moedas e deve reservar 5 para continuar plantando.`);
   state.coins-=def.cost;state.buildings[id]={boughtAt:Date.now(),readyAt:id==='apple'?Date.now()+60000:null};
-  save();update();openShop('buildings');tell(`${def.name} comprado! Clique nele na fazenda para usar.`);
+  save();update();if(origin==='machines')openMachines();else openShop('buildings');tell(`${def.name} comprado! Clique nele na fazenda para usar.`);
 }
 function openShop(tab='seeds'){
   leaveExpansionMode();
   const seeds=Object.entries(CROPS).map(([id,c])=>{
     const locked=level()<c.level;
-    return `<div class="shop-row ${locked?'unavailable':''}"><span class="crop-art ${id==='corn'?'corn':id==='carrot'?'carrot':'berry'}-art"><i></i>${id==='corn'?'<i></i><i></i>':''}</span><div><b>${c.name}</b><small>${c.grow/1000} s · venda: ${Math.floor(c.sale*(state.buildings.cottage?1.2:1))} moedas · ${c.xp} XP</small></div><button data-buy="${id}" ${locked?'disabled':''}>${locked?'Nível '+c.level:'Plantar · '+c.cost}</button></div>`;
+    return `<div class="shop-row ${locked?'unavailable':''}"><span class="crop-art ${id==='corn'?'corn':id==='carrot'?'carrot':'berry'}-art"><i></i>${id==='corn'?'<i></i><i></i>':''}</span><div><b>${c.name}</b><small>${c.grow/1000} s · venda: ${Math.floor(c.sale*(isPlaced('cottage')?1.2:1))} moedas · ${c.xp} XP</small></div><button data-buy="${id}" ${locked?'disabled':''}>${locked?'Nível '+c.level:'Plantar · '+c.cost}</button></div>`;
   }).join('');
   const buildings=Object.entries(BUILDINGS).map(([id,b])=>{
     const has=!!state.buildings[id],locked=level()<b.level;
-    return `<div class="shop-row ${locked?'unavailable':''}"><span class="upgrade-icon">${{apple:'♣',coop:'⌂',cottage:'⌂',tractor:'⚙'}[id]}</span><div><b>${b.name}</b><small>${b.description}</small></div><button data-building="${id}" ${has||locked?'disabled':''}>${has?'Comprado':locked?'Nível '+b.level:b.cost+' moedas'}</button></div>`;
+    return `<div class="shop-row ${locked?'unavailable':''}"><span class="upgrade-icon">${{apple:'♣',coop:'⌂',cottage:'⌂',tractor:'⚙'}[id]}</span><div><b>${b.name}</b><small>${b.description}</small></div><button data-building="${id}" ${has||locked?'disabled':''}>${has?(state.buildings[id].stored?'No armazém':'Comprado'):locked?'Nível '+b.level:b.cost+' moedas'}</button></div>`;
   }).join('');
   modal('Loja da fazenda',`<div class="shop-summary">Nível ${level()} · ${state.coins} moedas</div><nav class="shop-tabs" aria-label="Categorias da loja"><button data-shop-tab="seeds" class="${tab==='seeds'?'active':''}">Sementes</button><button data-shop-tab="buildings" class="${tab==='buildings'?'active':''}">Construções</button><button id="shop-expansion">Expansão</button></nav>${tab==='buildings'?buildings:seeds}<p class="shop-note">As melhorias preservam 5 moedas para você continuar plantando.</p>`);
   document.querySelectorAll('[data-shop-tab]').forEach(b=>b.onclick=()=>openShop(b.dataset.shopTab));
@@ -386,12 +405,12 @@ function openShop(tab='seeds'){
   document.querySelectorAll('[data-building]').forEach(b=>b.onclick=()=>buyBuilding(b.dataset.building));
 }
 function drawBuildings(timestamp){
-  if(state.buildings.cottage)barn(BUILDINGS.cottage.x,BUILDINGS.cottage.y,.91,true);
-  if(state.buildings.apple){
+  if(isPlaced('cottage'))barn(BUILDINGS.cottage.x,BUILDINGS.cottage.y,.91,true);
+  if(isPlaced('apple')){
     const {x,y}=BUILDINGS.apple;tree(x,y,.95,Date.now()>=state.buildings.apple.readyAt?'fruit':'green');
     if(Date.now()>=state.buildings.apple.readyAt)productionBadge(x,y-80,'Frutas prontas');
   }
-  if(state.buildings.coop){
+  if(isPlaced('coop')){
     const b=state.buildings.coop;
     at(BUILDINGS.coop.x-850,BUILDINGS.coop.y-330,1,()=>{
     fence([[788,336],[847,308],[909,339]]);barn(873,323,.53);
@@ -400,7 +419,7 @@ function drawBuildings(timestamp){
     if(b.readyAt&&Date.now()>=b.readyAt)productionBadge(848,261,'Ovos prontos');
     });
   }
-  if(state.buildings.tractor)tractor(BUILDINGS.tractor.x,BUILDINGS.tractor.y);
+  if(isPlaced('tractor'))tractor(BUILDINGS.tractor.x,BUILDINGS.tractor.y);
 }
 function productionBadge(x,y,text){
   ctx.font='bold 9px Tahoma';ctx.textAlign='center';
@@ -409,13 +428,13 @@ function productionBadge(x,y,text){
 function buildingAt(clientX,clientY){
   const box=canvas.getBoundingClientRect(),x=(clientX-box.left-tx)/scale,y=(clientY-box.top-ty)/scale;
   return Object.keys(BUILDINGS).find(id=>{
-    if(!state.buildings[id])return false;const b=BUILDINGS[id];
+    if(!isPlaced(id))return false;const b=BUILDINGS[id];
     const w=id==='coop'?67:id==='apple'?30:42,h=id==='cottage'?100:id==='apple'?85:65;
     return x>b.x-w&&x<b.x+w&&y>b.y-h&&y<b.y+14;
   });
 }
 function openBuilding(id){
-  const b=state.buildings[id],def=BUILDINGS[id];if(!b||!def)return;
+  const b=state.buildings[id],def=BUILDINGS[id];if(!isPlaced(id)||!def)return;
   let content=`<p>${def.description}</p>`,action=null,label='';
   if(id==='apple'){
     if(Date.now()>=b.readyAt){content+='<p>Suas laranjas estão maduras! Venda esta colheita por <b>15 moedas e 3 XP</b>.</p>';action='fruit';label='Colher laranjas';}
@@ -431,11 +450,12 @@ function openBuilding(id){
     if(count){action='waterAll';label=`Regar tudo · ${count} moedas`;}
   }
   if(action)content+=`<button class="production-button" id="production-action">${label}</button>`;
-  modal(def.name,content);activeBuilding=id;
+  content+='<button class="storage-button" id="store-building">Guardar no armazém</button>';
+  modal(def.name,content);activeBuilding=id;$('#store-building').onclick=()=>storeBuilding(id);
   if(action)$('#production-action').onclick=()=>useBuilding(id,action);
 }
 function useBuilding(id,action){
-  const b=state.buildings[id];if(!b)return;let up=false;
+  const b=state.buildings[id];if(!isPlaced(id))return;let up=false;
   if(id==='apple'&&action==='fruit'&&Date.now()>=b.readyAt){state.coins+=15;up=grantXP(3);b.readyAt=Date.now()+60000;tell('Laranjas vendidas! +15 moedas e +3 XP.');}
   else if(id==='coop'&&action==='feed'&&b.readyAt===null){if(state.coins<5)return tell('Você precisa de 5 moedas para alimentar as galinhas.');state.coins-=5;b.readyAt=Date.now()+45000;tell('Galinhas alimentadas! Os ovos ficam prontos em 45 segundos.');}
   else if(id==='coop'&&action==='eggs'&&b.readyAt&&Date.now()>=b.readyAt){state.coins+=30;up=grantXP(5);b.readyAt=null;tell('Ovos vendidos! +30 moedas e +5 XP.');}
@@ -503,4 +523,44 @@ function drawExpansionPreview(){
   const current=landCorners(),future=landCorners(next.size);
   poly([current.right,future.right,future.front,future.left,current.left,current.front],'#c1e68135');
   ctx.save();ctx.setLineDash([5,4]);line([future.left,future.front,future.right],'#fff2b8',1.5);ctx.restore();
+}
+
+function openAchievements(){
+  const achievements=[
+    {name:'Primeira colheita',description:'Faça sua primeira colheita.',current:state.counts.harvest,target:1},
+    {name:'Mãos na terra',description:'Plante 10 vezes.',current:state.counts.plant,target:10},
+    {name:'Fazendeiro dedicado',description:'Faça 50 colheitas.',current:state.counts.harvest,target:50},
+    {name:'Novos horizontes',description:'Compre a primeira expansão.',current:state.landStep,target:1},
+    {name:'Vida no campo',description:'Conquiste seu primeiro galinheiro.',current:state.buildings.coop?1:0,target:1},
+    {name:'Fazenda mecanizada',description:'Conquiste seu primeiro trator.',current:state.buildings.tractor?1:0,target:1}
+  ];
+  const count=achievements.filter(a=>a.current>=a.target).length;
+  modal('Conquistas',`<div class="shop-summary">${count} de ${achievements.length} conquistas desbloqueadas</div>`+achievements.map(a=>`<div class="achievement-card ${a.current>=a.target?'unlocked':''}"><span class="achievement-medal">★</span><div><b>${a.name}</b><small>${a.description}<br>${Math.min(a.current,a.target)} / ${a.target}${a.current>=a.target?' · conquistado':''}</small></div></div>`).join(''));
+}
+function openMachines(){
+  leaveExpansionMode();const def=BUILDINGS.tractor,ownedMachine=state.buildings.tractor,locked=level()<def.level;
+  modal('Máquinas e tratores',`<div class="empty-state"><svg aria-hidden="true"><use href="#i-helmet"/></svg></div><div class="shop-row"><span class="upgrade-icon">⚙</span><div><b>Trator</b><small>${def.description}</small></div><button id="machine-action" ${!ownedMachine&&locked?'disabled':''}>${ownedMachine?(ownedMachine.stored?'No armazém':'Usar trator'):locked?'Nível '+def.level:def.cost+' moedas'}</button></div><p>${ownedMachine?'Seu trator é seu: você pode usá-lo na fazenda ou guardá-lo no armazém.':'Continue evoluindo para comprar sua primeira máquina.'}</p>`);
+  $('#machine-action').onclick=()=>{
+    if(ownedMachine){if(ownedMachine.stored)openWarehouse();else openBuilding('tractor');}
+    else buyBuilding('tractor','machines');
+  };
+}
+function openGifts(){
+  leaveExpansionMode();
+  modal('Presentes dos amigos','<div class="empty-state"><svg aria-hidden="true"><use href="#i-gift"/></svg><b>Nenhum presente recebido</b><p>Os presentes enviados pelos seus amigos aparecerão aqui.</p><p>As fazendas dos amigos ainda não estão conectadas nesta versão.</p></div>');
+}
+function openWarehouse(){
+  leaveExpansionMode();const stored=Object.entries(state.buildings).filter(([,b])=>b.stored);
+  modal('Armazém',stored.length?`<p>${stored.length} ${stored.length===1?'item guardado':'itens guardados'}. Recoloque seus itens na fazenda sem pagar novamente.</p>`+stored.map(([id,b])=>`<div class="warehouse-row"><svg aria-hidden="true"><use href="#${id==='tractor'?'i-helmet':id==='apple'?'i-seed':'i-warehouse'}"/></svg><div><b>${BUILDINGS[id].name}</b><small>${b.remainingMs!==null&&b.remainingMs!==undefined?'Produção pausada enquanto estiver guardado.':'Pronto para voltar à fazenda.'}</small></div><button data-restore="${id}">Recolocar</button></div>`).join(''):'<div class="empty-state"><svg aria-hidden="true"><use href="#i-warehouse"/></svg><b>Seu armazém está vazio</b><p>Clique em um objeto da fazenda e escolha <b>Guardar no armazém</b>. Ele ficará aqui até você decidir recolocá-lo.</p></div>');
+  document.querySelectorAll('[data-restore]').forEach(b=>b.onclick=()=>restoreBuilding(b.dataset.restore));
+}
+function storeBuilding(id){
+  if(!isPlaced(id))return;const b=state.buildings[id];
+  b.remainingMs=b.readyAt===null?null:Math.max(0,b.readyAt-Date.now());b.readyAt=null;b.stored=true;
+  save();update();openWarehouse();tell(`${BUILDINGS[id].name} guardado no armazém.`);
+}
+function restoreBuilding(id){
+  const b=state.buildings[id];if(!b?.stored)return;
+  b.stored=false;b.readyAt=b.remainingMs===null||b.remainingMs===undefined?null:Date.now()+b.remainingMs;delete b.remainingMs;
+  save();update();openWarehouse();tell(`${BUILDINGS[id].name} voltou para a fazenda, sem custo.`);
 }

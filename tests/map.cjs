@@ -35,7 +35,7 @@ const assert=require('node:assert/strict');
   await page.screenshot({path:'/tmp/farm-v4-mobile-expansion.png'});await page.click('#exit-expansion');await checkHidden();
   // The previous centered farm is rebased once, retaining its crops and purchases.
   await page.evaluate(()=>{
-   const legacy=freshState();delete legacy.mapLayout;legacy.landStep=1;legacy.coins=123;legacy.xp=144;
+   const legacy=freshState();delete legacy.mapLayout;delete legacy.soilLayout;legacy.landStep=1;legacy.coins=123;legacy.xp=144;
    legacy.plots[5*N+6]={stage:2,crop:'carrot',watered:Date.now()-5000};legacy.buildings.apple={boughtAt:Date.now()-10000,readyAt:Date.now()+50000};
    state=legacy;save();
   });

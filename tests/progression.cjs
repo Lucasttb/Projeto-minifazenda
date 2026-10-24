@@ -31,6 +31,7 @@ const assert=require('node:assert/strict');
   await plot(11,11);assert.equal((await get()).coins,50,'locked land cannot be planted');
   await page.click('[data-crop="carrot"]',{force:true});assert.equal(await page.evaluate(()=>crop),'corn');
   await page.evaluate(()=>{buyBuilding('coop');buyExpansion();});assert.equal((await get()).coins,50);
+  await page.click('[data-tool="till"]');await plot();await page.click('[data-crop="corn"]');
   await plot();assert.equal((await get()).coins,45);await claim();assert.equal((await get()).coins,55);
   await page.evaluate(()=>claimMission());assert.equal((await get()).coins,55,'incomplete mission cannot be claimed');
   await page.click('[data-tool="water"]');await plot();await claim();assert.equal((await get()).xp,10);

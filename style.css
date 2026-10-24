@@ -748,3 +748,30 @@ dialog p {
 .expansion-banner button {border:1px solid #a59662;background:#ebe0b4;padding:7px 10px;border-radius:4px;color:#75693f;font-weight:bold;font-size:11px;}
 .expanding .objective,.expanding .quests {visibility:hidden;}
 @media(max-width:620px){.expansion-banner{top:88px;right:9px;width:204px;padding:10px;}.expansion-banner strong{font-size:16px;}.expansion-banner p{font-size:10px;}.expansion-banner button{font-size:10px;}.expansion-comparison{font-size:17px;gap:12px;}}
+
+/* Seven-button panel: shop spans both rows, followed by three columns. */
+.farm-panel {position:absolute;right:17px;bottom:23px;display:grid;grid-template-columns:52px repeat(3,38px);grid-template-rows:36px 36px;gap:3px;padding:4px;background:linear-gradient(#629838,#306d2d);border:2px solid #a6b659;border-radius:6px;box-shadow:0 2px 0 #174b2a,0 3px 6px #153e2c60;z-index:3;}
+.farm-panel button {position:relative;display:flex;justify-content:center;align-items:center;padding:1px;background:linear-gradient(135deg,#99d765,#63ae43 60%,#429737);border:1px solid #d2d276;border-right-color:#2c7530;border-bottom-color:#2c7530;border-radius:4px;box-shadow:inset 0 0 0 1px #bedc8870;}
+.farm-panel button:hover {background:linear-gradient(#b5e784,#75bf4d);}
+.farm-panel button.active {background:linear-gradient(#d4eea3,#83c45a);box-shadow:inset 0 0 0 1px #f7f4b4;border-color:#fff3a6;}
+.farm-panel button svg {width:32px;height:32px;filter:drop-shadow(0 1px 0 #3f702450);}
+.farm-panel .panel-shop {grid-column:1;grid-row:1/3;flex-direction:column;justify-content:flex-end;padding-bottom:5px;gap:0;}
+.panel-shop svg {width:47px!important;height:47px!important;}
+.panel-shop b {font:bold 13px Tahoma;color:#f8ffe1;text-shadow:-1px -1px #46772f,1px 1px #46772f,0 2px #46772f;}
+.panel-view {grid-column:2;grid-row:1;}.panel-hoe {grid-column:3;grid-row:1;}.panel-machines {grid-column:4;grid-row:1;}
+.panel-achievements {grid-column:2;grid-row:2;}.panel-gifts {grid-column:3;grid-row:2;}.panel-warehouse {grid-column:4;grid-row:2;}
+.gift-count {position:absolute;right:-4px;top:-6px;min-width:16px;height:16px;border:1px solid #fff3d1;border-radius:50%;background:#e33332;color:white;font:bold 10px Tahoma;display:grid;place-items:center;box-shadow:0 1px 1px #773c29;}
+.dock {left:18px;transform:none;}
+.camera {bottom:118px;right:18px;}
+.warehouse-row {display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid #cab77c;}
+.warehouse-row>div {flex:1;}.warehouse-row b {font-size:13px;}.warehouse-row small {display:block;font-size:10px;color:#8d7c4d;margin-top:5px;}
+.warehouse-row button {border:1px solid #7a9c44;background:#c7dfa1;border-radius:4px;padding:8px;color:#4a6830;font-size:11px;font-weight:bold;}
+.storage-button {display:block;margin-top:20px;padding:8px 12px;border:1px solid #ae9c6b;border-radius:4px;background:#e5d6ac;color:#806e44;font-size:11px;}
+.achievement-card {padding:12px 0;border-bottom:1px solid #ccb87e;display:flex;gap:12px;align-items:center;}
+.achievement-medal {display:grid;place-items:center;flex-shrink:0;width:36px;height:40px;background:#b9b99b;color:#e5e2c3;font-size:23px;border:2px solid #d8cfa3;border-radius:50%;}
+.achievement-card.unlocked .achievement-medal {background:linear-gradient(#ffeb98,#d5a631);color:#fff7ce;border-color:#ac8b36;box-shadow:0 2px #b29148;}
+.achievement-card b {display:block;font-size:12px;}.achievement-card small {display:block;font-size:10px;color:#857e53;line-height:1.6;margin-top:4px;}
+.empty-state {padding:15px 0 8px;text-align:center;}.empty-state svg {width:70px;height:70px;margin:0 auto 7px;display:block;}.empty-state b {font-size:15px;color:#72864e;}.empty-state p {color:#8b8057;font-size:12px!important;}
+.farm-panel button:focus-visible {outline:3px solid #fff6bb;outline-offset:2px;}
+@media(max-width:850px){.dock{bottom:119px;}.toast{bottom:236px;}.camera{bottom:26px;left:15px;right:auto;flex-direction:row;}}
+@media(max-width:620px){.dock{left:8px;bottom:116px;height:85px;}.farm-panel{right:8px;bottom:20px;}.camera{left:10px;bottom:27px;}.toast{bottom:214px;}.hint{display:none;}}
