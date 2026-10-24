@@ -5,6 +5,7 @@ const assert=require('node:assert/strict');
  try{
   const context=await browser.newContext({viewport:{width:1200,height:780}}),page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));const base=process.env.BASE_URL||'http://127.0.0.1:8000';
+  await context.addInitScript(()=>{if(!localStorage.getItem('minifazenda-player-name'))localStorage.setItem('minifazenda-player-name','Teste');});
   await page.goto(base);await page.waitForTimeout(100);
   const checkHidden=async()=>{assert.equal(await page.locator('.expand-arrow:visible').count(),0);assert.equal(await page.locator('#expansion-banner').isVisible(),false);};
   const mode=async()=>{await page.click('#shop');assert.equal(await page.locator('#expansion-banner').isVisible(),false);assert.ok(!(await page.locator('#modal-body').textContent()).includes('×'));await page.click('#shop-expansion');};

@@ -1,6 +1,6 @@
-# Minha Minifazenda — Recanto do Sol
+# Minha Minifazenda
 
-Jogo de fazenda isométrica para navegador, com começo pequeno e progressão por colheitas, moedas e experiência. As referências visuais orientam o estilo; os objetos de uma fazenda avançada não são entregues no início. Ilustrações originais em Canvas e SVG, sem arquivos ou serviços da Vostu.
+Jogo de fazenda isométrica para navegador, com começo pequeno e progressão por colheitas, MiniOuro e experiência. As referências visuais orientam o estilo; os objetos de uma fazenda avançada não são entregues no início. Ilustrações originais em Canvas e SVG, sem arquivos ou serviços da Vostu.
 
 ## Desenvolvimento
 
@@ -15,7 +15,7 @@ Confira a sintaxe com `node --check game.js`.
 
 ## Início e progressão
 
-A partida começa no nível 1, com 50 moedas, nove espaços de grama para preparar, milho liberado e nenhum prédio ou animal comprado. Selecione a enxada, aplique terra sem custo, escolha uma semente, plante, regue, espere crescer e colha para vender. A terra preparada permanece após a colheita. Objetivos sequenciais dão recompensas que só podem ser recebidas uma vez. Cada 100 XP corresponde a um nível.
+A partida começa no nível 1, com 50 MiniOuro e 0 MiniGrana, nove espaços de grama para preparar, milho liberado e nenhum prédio ou animal comprado. Selecione a enxada, aplique terra sem custo, escolha uma semente, plante, regue, espere crescer e colha para vender. A terra preparada permanece após a colheita. Não há tutorial, quadro de objetivos guiados ou instruções automáticas na tela. Cada 100 XP corresponde a um nível.
 
 | Cultura | Nível | Custo | Crescimento | Venda | XP |
 | --- | --- | --- | --- | --- | --- |
@@ -41,19 +41,23 @@ Compras de melhorias preservam pelo menos 5 moedas para que o jogador possa cont
 
 ## Controles e salvamento
 
-Arraste o mapa para mover a câmera, use a roda ou +/− para aproximar e o botão de casa para centralizar. As teclas 1 a 5 selecionam visualizar, plantar, regar, colher e aplicar terra. Ajuda e Objetivos ficam à esquerda.
+Arraste o mapa para mover a câmera, use a roda ou +/− para aproximar e o botão de casa para centralizar. As teclas 1 a 5 selecionam visualizar, plantar, regar, colher e aplicar terra. O cursor é uma seta branca em todos os modos, inclusive durante o arraste.
 
 O painel verde no canto inferior direito mantém a disposição da referência: Loja ocupa duas linhas à esquerda; visualizar, enxada e máquinas ficam em cima; conquistas, presentes e armazém ficam embaixo.
 
 - **Loja:** sementes, construções e entrada para o modo de expansão.
 - **Visualizar:** modo inicial; inspeciona a fazenda e abre objetos sem plantar ou modificar o solo.
 - **Enxada:** aplica terra gratuitamente nos espaços de grama liberados. Não prepara áreas bloqueadas.
-- **Conquistas:** medalhas ligadas às colheitas, plantios, expansões e bens conquistados. Os objetivos com recompensas continuam separados.
+- **Conquistas:** medalhas ligadas às colheitas, plantios, expansões e bens conquistados.
 - **Máquinas:** consulta, compra e uso do trator, respeitando o nível necessário.
 - **Presentes:** caixa vazia, com contador zero. O envio real entre amigos ainda não existe; a interface informa essa limitação e não inventa presentes recebidos.
-- **Armazém:** guarda os objetos retirados da fazenda. Clique em um objeto e em “Guardar no armazém”; depois use “Recolocar” para devolvê-lo à posição original sem pagar novamente. Objetos guardados não aparecem na fazenda, não produzem e não dão bônus. A produção retoma o tempo restante quando o objeto volta.
+- **Armazém:** guarda apenas objetos não vivos, como construções e máquinas. Árvores, plantas e animais não podem ser guardados. Clique em um objeto e em “Guardar no armazém”; depois use “Recolocar” para devolvê-lo à posição original sem pagar novamente. Objetos guardados não aparecem na fazenda, não produzem e não dão bônus. A produção da construção retoma o tempo restante quando ela volta. Ao guardar o galinheiro, as galinhas continuam na fazenda; não vão para o armazém. Laranjeiras guardadas pela versão anterior são devolvidas à fazenda, conservando o tempo restante da produção.
 
-O progresso é salvo automaticamente neste navegador, sob `minifazenda-progress-v3`. Esta campanha começa do zero, separada do antigo protótipo com cenário pronto. O salvamento anterior (`minifazenda-save-v1`) permanece intacto. A migração do terreno centralizado para a expansão frontal conserva moedas, XP, compras, culturas e seus tempos; uma cópia anterior fica em `minifazenda-progress-v3-before-front-square`. A atualização da enxada preserva a terra preparada nos salvamentos anteriores e mantém uma cópia em `minifazenda-progress-v3-before-manual-soil`. Ainda não há contas, sincronização entre aparelhos ou visitas a amigos.
+A barra superior reúne experiência e nível à esquerda, com **Fazenda de [nome]** logo abaixo. O Passaporte pede o nome uma única vez e permite alterá-lo depois. O nome fica em `minifazenda-player-name`; é um perfil local, sem autenticação ou sincronização entre jogadores.
+
+MiniOuro é o saldo dourado, usado nas compras da fazenda; o saldo antigo de moedas é preservado. MiniGrana é o saldo verde separado e começa em zero. Os nomes das moedas não aparecem como legendas na barra: um tooltip mostra o nome após exatamente 2.000 ms de permanência do mouse e some ao sair. A compra de MiniGrana ainda não está implementada, e o botão informa isso.
+
+O progresso é salvo automaticamente neste navegador, sob `minifazenda-progress-v3`. Esta campanha começa do zero, separada do antigo protótipo com cenário pronto. O salvamento anterior (`minifazenda-save-v1`) permanece intacto. A migração do terreno centralizado para a expansão frontal conserva moedas, XP, compras, culturas e seus tempos; uma cópia anterior fica em `minifazenda-progress-v3-before-front-square`. A atualização da enxada preserva a terra preparada nos salvamentos anteriores e mantém uma cópia em `minifazenda-progress-v3-before-manual-soil`. A adaptação das regras de vida e armazém preserva uma cópia em `minifazenda-progress-v3-before-living-rules`. Ainda não há contas, sincronização entre aparelhos ou visitas a amigos.
 
 ## Teste funcional
 
@@ -64,11 +68,12 @@ npm install --prefix /tmp/minifazenda-check --cache /tmp/npm-cache playwright
 PLAYWRIGHT_MODULE=/tmp/minifazenda-check/node_modules/playwright node tests/progression.cjs
 PLAYWRIGHT_MODULE=/tmp/minifazenda-check/node_modules/playwright node tests/map.cjs
 PLAYWRIGHT_MODULE=/tmp/minifazenda-check/node_modules/playwright node tests/panel.cjs
+PLAYWRIGHT_MODULE=/tmp/minifazenda-check/node_modules/playwright node tests/header.cjs
 ```
 
 `BASE_URL` pode indicar outro servidor local e `CHROMIUM_PATH` pode indicar outro executável. O padrão é `http://127.0.0.1:8000` e `/usr/bin/chromium`.
 
-O teste percorre a evolução inicial com colheitas reais e relógio simulado, verifica bloqueios por nível, expansões, recompensas únicas, produção das construções, bônus da casa, trator, reserva para sementes, persistência e interface móvel. Os cenários de níveis avançados usam um estado preparado exclusivamente no navegador de teste. O teste de mapa verifica a geometria quadrada, a âncora de trás, as expansões frontais, a visibilidade das medidas somente no modo de expansão, os dois controles, cancelamento e migração dos salvamentos. O teste de painel verifica os sete botões, a enxada, o modo de visualizar, as conquistas, as máquinas, a caixa de presentes vazia, o ciclo de guardar/recolocar, a pausa de produção e o posicionamento em telas de 390 e 320 pixels.
+O teste percorre a evolução inicial com colheitas reais e relógio simulado, verifica bloqueios por nível, expansões, produção das construções, bônus da casa, trator, reserva para sementes, persistência e interface móvel. Os cenários de níveis avançados usam um estado preparado exclusivamente no navegador de teste. O teste de mapa verifica a geometria quadrada, a âncora de trás, as expansões frontais, a visibilidade das medidas somente no modo de expansão, os dois controles, cancelamento e migração dos salvamentos. O teste de painel verifica os sete botões, a enxada, o modo de visualizar, as conquistas, as máquinas, a caixa de presentes vazia, o ciclo de guardar/recolocar, a pausa de produção e o posicionamento em telas de 390 e 320 pixels. O teste de cabeçalho verifica a ausência do tutorial, nome e persistência do perfil, os saldos separados, o tooltip aos 2.000 ms, o cursor branco, a proibição de guardar seres vivos, a presença das galinhas mesmo com o galinheiro guardado e o resgate de árvores dos salvamentos anteriores.
 
 ## Publicação
 
