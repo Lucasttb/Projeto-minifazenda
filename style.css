@@ -723,3 +723,28 @@ dialog p {
  .objective button {font-size:9px;padding:5px 7px;}
  .land-size {font-size:8px;margin-top:5px;}
 }
+
+.expansion-controls {position:absolute;inset:0;pointer-events:none;}
+.expand-arrow {position:absolute;pointer-events:auto;transform:translate(-50%,-24%);background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;width:110px;filter:drop-shadow(0 3px 1px #265d2f70);color:#fffbd9;text-shadow:1px 1px 2px #31522a;}
+.expand-arrow[hidden] {display:none;}
+.expand-arrow svg {width:46px;height:46px;fill:#e2ed91;stroke:#fffbd4;stroke-width:2;filter:drop-shadow(1px 2px 0 #608442);}
+#expand-left svg {transform:rotate(65deg);}
+#expand-right svg {transform:rotate(-65deg);}
+.expand-arrow b {font-size:10px;letter-spacing:.8px;margin-top:1px;}
+.expand-arrow small {font-size:9px;color:#ecf6d0;margin-top:3px;background:#28652baa;border-radius:3px;padding:2px 5px;}
+.expand-arrow:hover svg {fill:#ffffbe;}
+.expand-arrow.level-locked svg {fill:#bfd28b;}
+.expansion-comparison {display:flex;justify-content:center;align-items:center;gap:25px;padding:18px;background:#e5e9b7;border:1px solid #b8bc7c;border-radius:6px;font-size:23px;color:#618444;}
+.production-button:disabled {background:#ded3ac;color:#9c9067;border-color:#baa77b;cursor:default;}
+@media(max-width:620px){.expand-arrow{width:85px;}.expand-arrow svg{width:37px;height:37px;}.expand-arrow b{font-size:8px;}.expand-arrow small{font-size:8px;}}
+.shop-tabs {display:flex;gap:5px;margin:15px 0 12px;}
+.shop-tabs button {flex:1;padding:9px 5px;border:1px solid #b7aa72;border-radius:4px;background:#ece2bc;color:#777343;font-size:11px;font-weight:bold;}
+.shop-tabs button.active {background:#c6dfa0;color:#49662f;border-color:#91a85e;}
+.expansion-banner {position:absolute;top:95px;right:18px;padding:13px;width:255px;background:#fff4d7f2;border:2px solid #c7ab66;border-radius:6px;color:#536b35;z-index:2;}
+.expansion-banner[hidden] {display:none;}
+.expansion-banner small {display:block;font-size:9px;letter-spacing:1px;color:#9b8754;margin-bottom:7px;}
+.expansion-banner strong {font-size:19px;display:block;}
+.expansion-banner p {font-size:11px;line-height:1.5;}
+.expansion-banner button {border:1px solid #a59662;background:#ebe0b4;padding:7px 10px;border-radius:4px;color:#75693f;font-weight:bold;font-size:11px;}
+.expanding .objective,.expanding .quests {visibility:hidden;}
+@media(max-width:620px){.expansion-banner{top:88px;right:9px;width:204px;padding:10px;}.expansion-banner strong{font-size:16px;}.expansion-banner p{font-size:10px;}.expansion-banner button{font-size:10px;}.expansion-comparison{font-size:17px;gap:12px;}}

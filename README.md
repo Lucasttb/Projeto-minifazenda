@@ -25,6 +25,10 @@ A partida começa no nível 1, com 50 moedas, nove canteiros vazios, milho liber
 
 As sementes são cobradas no plantio. Plantas crescem pelo tempo transcorrido, inclusive enquanto a página está fechada. Não murcham.
 
+O mapa de fundo e o terreno são camadas separadas. O terreno é um quadrado em perspectiva isométrica, com a ponta da frente voltada para o jogador. Sua borda normal é apenas verde, sem setas ou medidas. O canto de trás é fixo; cada expansão adiciona área somente pelas duas bordas da frente, preservando o quadrado e todos os canteiros existentes.
+
+Para expandir, abra **Loja → Expansão**. Apenas nesse modo aparecem a metragem atual e futura, a prévia da área e duas setas nas bordas da frente. Ambas abrem a mesma compra de expansão quadrada. **Voltar à fazenda**, Escape ou selecionar uma ferramenta encerra a visualização. A metragem considera os canteiros e a faixa de grama do terreno: começa em 9 × 9 m e pode chegar a 18 × 18 m.
+
 A loja permite comprar melhorias; o nível libera a opção e as moedas pagam a compra:
 
 - Terreno: 9 → 25 → 49 → 81 → 144 canteiros. Expansões custam 100, 250, 600 e 1.200 moedas e exigem níveis 2, 3, 5 e 7.
@@ -39,7 +43,7 @@ Compras de melhorias preservam pelo menos 5 moedas para que o jogador possa cont
 
 Arraste o mapa para mover a câmera, use a roda ou +/− para aproximar e o botão de casa para centralizar. As teclas 1 a 4 selecionam examinar, plantar, regar e colher. Ajuda e Objetivos ficam à esquerda; Loja na barra inferior.
 
-O progresso é salvo automaticamente neste navegador, sob `minifazenda-progress-v3`. Esta campanha começa do zero, separada do antigo protótipo com cenário pronto. O salvamento anterior (`minifazenda-save-v1`) permanece intacto. Ainda não há contas, sincronização entre aparelhos ou visitas a amigos.
+O progresso é salvo automaticamente neste navegador, sob `minifazenda-progress-v3`. Esta campanha começa do zero, separada do antigo protótipo com cenário pronto. O salvamento anterior (`minifazenda-save-v1`) permanece intacto. A migração do terreno centralizado para a expansão frontal conserva moedas, XP, compras, culturas e seus tempos; uma cópia anterior fica em `minifazenda-progress-v3-before-front-square`. Ainda não há contas, sincronização entre aparelhos ou visitas a amigos.
 
 ## Teste funcional
 
@@ -48,11 +52,12 @@ O teste automatizado usa Chromium e Playwright apenas no desenvolvimento. Com o 
 ```sh
 npm install --prefix /tmp/minifazenda-check --cache /tmp/npm-cache playwright
 PLAYWRIGHT_MODULE=/tmp/minifazenda-check/node_modules/playwright node tests/progression.cjs
+PLAYWRIGHT_MODULE=/tmp/minifazenda-check/node_modules/playwright node tests/map.cjs
 ```
 
 `BASE_URL` pode indicar outro servidor local e `CHROMIUM_PATH` pode indicar outro executável. O padrão é `http://127.0.0.1:8000` e `/usr/bin/chromium`.
 
-O teste percorre a evolução inicial com colheitas reais e relógio simulado, verifica bloqueios por nível, expansões, recompensas únicas, produção das construções, bônus da casa, trator, reserva para sementes, persistência e interface móvel. Os cenários de níveis avançados usam um estado preparado exclusivamente no navegador de teste.
+O teste percorre a evolução inicial com colheitas reais e relógio simulado, verifica bloqueios por nível, expansões, recompensas únicas, produção das construções, bônus da casa, trator, reserva para sementes, persistência e interface móvel. Os cenários de níveis avançados usam um estado preparado exclusivamente no navegador de teste. O teste de mapa verifica a geometria quadrada, a âncora de trás, as expansões frontais, a visibilidade das medidas somente no modo de expansão, os dois controles, cancelamento e migração dos salvamentos.
 
 ## Publicação
 
