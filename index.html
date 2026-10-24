@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#277b30"><title>Minha Minifazenda</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <svg class="symbols" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
@@ -18,14 +18,14 @@
 </defs></svg>
 <main id="game">
 <canvas id="farm" aria-label="Fazenda isométrica interativa. Escolha uma ferramenta e clique nos canteiros."></canvas>
-<header class="hud"><div class="experience"><span id="xp">0 / 100</span><div id="xp-fill"></div></div><div class="level"><svg><use href="#i-star"/></svg><strong id="level">1</strong></div><div class="balance"><svg><use href="#i-coin"/></svg><strong id="money">200</strong></div><button class="save" id="save" title="Salvar fazenda"><svg><use href="#i-save"/></svg><span>Salvar</span></button></header>
+<header class="hud"><div class="experience"><span id="xp">0 / 100</span><div id="xp-fill"></div></div><div class="level"><svg><use href="#i-star"/></svg><strong id="level">1</strong></div><div class="balance"><svg><use href="#i-coin"/></svg><strong id="money">50</strong></div><button class="save" id="save" title="Salvar fazenda"><svg><use href="#i-save"/></svg><span>Salvar</span></button></header>
 <div class="farm-title"><span>Fazenda</span><strong>Recanto do Sol</strong></div>
-<div class="version">EM CONSTRUÇÃO <b>02</b></div>
+<section class="objective" aria-label="Objetivo atual"><small>SEU PRÓXIMO PASSO <span id="objective-progress"></span></small><b id="objective-title"></b><p id="objective-text"></p><button id="claim" disabled>Receber recompensa</button><span class="land-size" id="land-size"></span></section><div class="version">EM CONSTRUÇÃO <b>03</b></div>
 <aside class="quests"><button id="quest" aria-label="Ver objetivo"><span class="quest-icon">!</span><b>Objetivos</b></button><button id="help" aria-label="Como jogar"><span class="help-icon">?</span><b>Ajuda</b></button></aside>
 <div class="tooltip" id="tooltip" hidden></div>
-<div class="toast" id="message" role="status">Sua fazenda ganhou vida! Escolha um canteiro para começar.</div>
+<div class="toast" id="message" role="status">Sua história começa aqui: 50 moedas, 9 canteiros e a primeira semente.</div>
 <footer class="dock"><section class="seed-cards" aria-label="Sementes"><div class="section-label">SUAS SEMENTES</div><button class="seed active" data-crop="corn"><span class="crop-art corn-art"><i></i><i></i><i></i></span><b>Milho</b><small>5 moedas</small></button><button class="seed" data-crop="carrot"><span class="crop-art carrot-art"><i></i></span><b>Cenoura</b><small>8 moedas</small></button><button class="seed" data-crop="strawberry"><span class="crop-art berry-art"><i></i></span><b>Morango</b><small>12 moedas</small></button></section><div class="dock-divider"></div><nav class="tools" aria-label="Ferramentas"><button data-tool="info" title="Examinar (1)"><svg><use href="#i-hand"/></svg><span>Examinar</span><kbd>1</kbd></button><button class="active" data-tool="plant" title="Plantar (2)"><svg><use href="#i-seed"/></svg><span>Plantar</span><kbd>2</kbd></button><button data-tool="water" title="Regar (3)"><svg><use href="#i-water"/></svg><span>Regar</span><kbd>3</kbd></button><button data-tool="harvest" title="Colher (4)"><svg><use href="#i-harvest"/></svg><span>Colher</span><kbd>4</kbd></button></nav><button class="shop" id="shop"><svg><use href="#i-shop"/></svg><b>LOJA</b></button></footer>
 <div class="camera"><button id="out" aria-label="Diminuir zoom">−</button><button id="home" aria-label="Centralizar fazenda">⌂</button><button id="in" aria-label="Aumentar zoom">+</button></div>
 <div class="hint">Arraste para passear pela fazenda · Role para aproximar</div>
 <dialog id="modal"><button id="close-modal" aria-label="Fechar">×</button><h2 id="modal-title"></h2><div id="modal-body"></div></dialog>
-</main><script src="game.js?v=2"></script></body></html>
+</main><script src="game.js?v=3"></script></body></html>

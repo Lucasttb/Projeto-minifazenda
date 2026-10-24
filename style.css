@@ -687,3 +687,39 @@ dialog p {
     font-size:8px;
   }
 }
+
+/* A visible next step makes the empty starter farm a beginning, not a finished scene. */
+.objective {position:absolute;right:18px;top:105px;width:225px;background:#fff4d7ed;border:2px solid #c7ab66;border-radius:7px;padding:12px;box-shadow:0 3px 0 #315b2b50;color:#4b5e32;}
+.objective>small {display:block;font-size:8px;letter-spacing:1px;color:#8d7c48;margin-bottom:7px;}
+.objective>small span {float:right;letter-spacing:0;}
+.objective>b {font-size:13px;display:block;}
+.objective p {font-size:11px;line-height:1.5;margin:7px 0 10px;}
+.objective button,.production-button {border:1px solid #7a9c44;background:linear-gradient(#d5edac,#accd7b);border-radius:4px;padding:7px 10px;font-weight:bold;font-size:10px;color:#45602c;}
+.objective button:disabled {background:#e7dfba;border-color:#c4b782;color:#9b926c;cursor:default;}
+.land-size {display:block;font-size:9px;color:#91855b;margin-top:8px;}
+.seed.locked {filter:saturate(.2);background:#e7e0c5;}
+.seed.locked:after {content:'🔒';position:absolute;top:2px;right:2px;font-size:10px;}
+.shop-summary {padding:9px;background:#e4e7ae;border:1px solid #b6ba74;border-radius:4px;font-size:12px;font-weight:bold;}
+#modal {max-height:85dvh;overflow-y:auto;}
+#modal h3 {font-size:14px;color:#6c743e;margin:22px 0 6px;}
+.shop-row button:disabled {background:#ddd3ae;border-color:#b8aa79;color:#8d8361;cursor:default;}
+.shop-row.unavailable {opacity:.65;}
+.shop-row .upgrade-icon {width:42px;flex-shrink:0;text-align:center;color:#789544;font-size:34px;}
+.shop-row div {min-width:0;}
+.shop-row button {max-width:95px;flex-shrink:0;}
+.shop-note {font-size:10px!important;}
+.mission-row {padding:12px 0;border-bottom:1px solid #c9b47d;}
+.mission-row b,.mission-row small,.mission-row span {display:block;line-height:1.6;}
+.mission-row b {font-size:13px;}
+.mission-row small {font-size:11px;color:#6d7446;}
+.mission-row span {font-size:10px;color:#94804a;}
+.mission-row.completed {opacity:.6;}
+.production-button {font-size:13px;padding:10px 14px;}
+@media(max-width:620px){
+ .objective {top:90px;right:9px;width:178px;padding:9px;}
+ .objective>b {font-size:11px;}
+ .objective p {font-size:10px;margin:5px 0 7px;}
+ .objective>small {font-size:7px;letter-spacing:.4px;}
+ .objective button {font-size:9px;padding:5px 7px;}
+ .land-size {font-size:8px;margin-top:5px;}
+}
